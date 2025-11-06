@@ -94,7 +94,7 @@ if opcion == "Análisis individual":
             std_dev = data["Daily Return"].std()
             risk_free_rate = 0
             sharpe_ratio = (avg_return - risk_free_rate) / std_dev if std_dev != 0 else 0
-            vol_anual = std_dev * np.sqrt(252)
+            vol_anual = std_dev * np.sqrt(252) # Aquí se usa 252 por defecto para datos diarios
             cum_return = (1 + data["Daily Return"]).prod() - 1
 
             # --- Métricas ---
@@ -141,6 +141,8 @@ elif opcion == "Análisis comparativo":
     start_date = st.sidebar.date_input("Fecha inicial:", pd.to_datetime("2020-01-01"))
     end_date = st.sidebar.date_input("Fecha final:", pd.to_datetime("2024-12-31"))
     inversion_inicial = st.sidebar.number_input("💰 Inversión inicial ($):", value=10000.0, min_value=100.0)
+    
+    # Se añade la variable para la frecuencia
     frecuencia = st.sidebar.selectbox("📅 Frecuencia temporal:", ["Diaria", "Semanal", "Mensual"])
     intervalo = {"Diaria": "1d", "Semanal": "1wk", "Mensual": "1mo"}[frecuencia]
 
@@ -167,7 +169,25 @@ elif opcion == "Análisis comparativo":
 
                 avg_returns = daily_returns.mean()
                 std_devs = daily_returns.std()
-                vol_anual = std_devs * np.sqrt(252)
+                
+                # --- INICIO CORRECCIÓN LÓGICA DE ANUALIZACIÓN ---
+                
+                # 1. Determinar el factor de anualización basado en la frecuencia seleccionada
+                if frecuencia == "Diaria":
+                    factor_anualizacion = 252 # Días hábiles
+                elif frecuencia == "Semanal":
+                    factor_anualizacion = 52  # Semanas
+                elif frecuencia == "Mensual":
+                    factor_anualizacion = 12  # Meses
+                else:
+                    # Falla de seguridad, aunque 'frecuencia' está restringida por selectbox
+                    factor_anualizacion = 252 
+                
+                # 2. Aplicar el factor de anualización correcto (sqrt(T))
+                vol_anual = std_devs * np.sqrt(factor_anualizacion)
+                
+                # --- FIN CORRECCIÓN LÓGICA DE ANUALIZACIÓN ---
+
                 sharpe_ratios = (avg_returns - 0) / std_devs
                 corr_matrix = daily_returns.corr()
 
