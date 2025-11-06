@@ -1,2 +1,10 @@
 streamlit
+pandas
 yfinance
+matplotlib
+numpy
+plotly.express
+seaborn
+plotly
+fpdf
+xlsxwriter
